@@ -1,0 +1,205 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry_core>=1.0.0"]
+
+[tool.poetry]
+authors = ["GoDaddy <oss@godaddy.com>"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Security",
+  "Topic :: Software Development :: Version Control :: Git",
+  "Typing :: Typed",
+]
+description = "tartufo is a tool for scanning git repositories for secrets/passwords/high-entropy data"
+documentation = "https://tartufo.readthedocs.io/"
+include = ["CHANGELOG.md", "README.md"]
+keywords = ["git", "security", "secrets", "entropy", "scanner"]
+license = "GPL-2.0-only"
+maintainers = ["GoDaddy <oss@godaddy.com>"]
+name = "tartufo"
+readme = "README.md"
+repository = "https://github.com/godaddy/tartufo/"
+version = "5.0.2"
+
+[tool.poetry.scripts]
+tartufo = "tartufo.cli:main"
+
+[tool.poetry.dependencies]
+python = ">=3.8, <3.14"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+coverage = {version = "^7.2.2", extras = ["toml"]}
+mypy = "^1.11.0"
+pre-commit = "*"
+pylint = "^3.2.6"
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+pytest-sugar = "^1.0.0"
+tox = "^4.16.0"
+vulture = "^2.11"
+types-requests = "^2.32.0.20240712"
+types-click = "^7.1.8"
+cached-property = "^1.5.2"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+recommonmark = "^0.7.1"
+sphinx = "^5.0.0"
+sphinx-autodoc-typehints = "^1.12.0"
+sphinx-click = "^4.0.0"
+sphinx-rtd-theme = "^1.0.0"
+sphinxcontrib-spelling = "^8.0.0"
+
+[tool.tartufo]
+cleanup = true
+entropy = true
+exclude-path-patterns = [
+    {path-pattern = 'poetry\.lock', reason = 'Excluding poetry lock file from being scanned'},
+    {path-pattern = 'pyproject\.toml', reason = 'Excluding toml file from being scanned'},
+    # To not have to escape `\` in regexes, use single quoted
+    # TOML 'literal strings'
+    {path-pattern = '\.github/workflows/(.*)\.yml', reason = 'Excluding workflow files \.github/workflows/(.*)\.yml from being scanned'},
+    {path-pattern = 'docs/source/(.*)\.rst', reason = 'Excluding documentation file docs/source/(.*)\.rst from being scanned'},
+    {path-pattern = 'tests/test_base_scanner\.py', reason = 'Excluding test file tests/test_base_scanner\.py from being scanned'},
+    {path-pattern = 'tests/test_util\.py', reason = 'Excluding test file tests/test_util\.py from being scanned'},
+    {path-pattern = 'tests/data/testRules\.json', reason = 'Excluding tests/data/testRules\.json from being scanned as it is rules file used for testing'},
+    {path-pattern = 'tartufo/data/default_regexes\.json', reason = 'Excluding tartufo/data/default_regexes\.json from being scanned as it is a trufflehog default regex list'},
+    {path-pattern = '\.git/.*', reason = 'Excluding .git files from being scanned'},
+]
+exclude-signatures = [
+  {signature = "ecbbe1edd6373c7e2b88b65d24d7fe84610faafd1bc2cf6ae35b43a77183e80b", reason = "Regular expression match, SSH (EC) private key 6-May-2018"},
+  {signature = "8396b1d3644342be68687c60baa0c514947a378145d73e7024124dc41374716f", reason = "High entropy string HEX_CHARS in truffleHog.py 30-Dec-2016"},
+  {signature = "39c9b3d1841fd0a9e2f17cddc42be2f2f860e321026403a0ebee997c0b9cb823", reason = "High entropy string BASE64_CHARS in truffleHog.py 30-Dec-2016"},
+  {signature = "7ac6c26fb6d5a4de410588cfc372bb7b8de705c081843e34921389be7f66da99", reason = "High entropy string BASE64_CHARS in truffleHog.py 02-Jan-2017"},
+  {signature = "e427548d2111e3b04aa23c998a8288645385206cea30cf7137acf7147dc32354", reason = "High entropy string HEX_CHARS in truffleHog/truffleHog.py 27-Feb-2017"},
+  {signature = "dbc084c22395931afd734a5be53f1cde913c7d988034b856087c744b424d9673", reason = "High entropy string BASE64_CHARS in truffleHog/truffleHog.py 9-Jan-2017"},
+  {signature = "bc67523b08b2170ca9b802535684454140679af3156bff808508cf32b33aa240", reason = "High entropy string random_stringHex in tests.py 28-Sep-21017"},
+  {signature = "978dc8605ef9bf471e467dd2d8570fd658f0a5f25378799a2ad8bb6ea480173d", reason = "High entropy string random_stringB64 in tests.py 28-Sep-21017"},
+  {signature = "bf48e316ecad0a37071ed81cc54a6b629a1a3bf73cf52d06a77c9fbaf91bc833", reason = "High entropy string in secretFile.txt 30-Dec-2016"},
+  {signature = "482e7b31188f1e59dd6eb5b21c46f7467449ffcbeba9a4ca412dfcd8ea9ef66f", reason = "High entropy string in temp/nothing 30-Dec-2016"},
+  {signature = "51dad1be0950e627bb3660a6246b42ddc6d6d431267b309af2469114fd2df2e5", reason = "Regular expression match, RSA private key in truffleHog/regexChecks.py 8-Dec-2017"},
+  {signature = "74c056ae650ffb202ea3b68207dce82ebeae0414cfe3b49f9db0c79841473da1", reason = "Regular expression match, PGP private key block in truffleHog/regexChecks.py 8-Dec-2017"},
+  {signature = "36617c71d89b78193c99fdd2a28027319dfdb361d649372bc72c45317f9edf24", reason = "Regular expression match, SSH (EC) private key in truffleHog/regexChecks.py 8-Dec-2017"},
+  {signature = "52aad73c20887b42debd58c7fb8fb2794ff8990d542e12eb81a8b73f96d48d9e", reason = "Regular expression match, SSH (DSA) private key in truffleHog/regexChecks.py 8-Dec-2017"},
+  {signature = "0d63f28f38ef29d7712bd1cb79003396c43eacd05510d1ac1bfe7ab2d0e5a566", reason = "Regular expression match, SSH (EC) private key in testRules.json 14-Jan-2018"},
+  {signature = "dc619cca965dd9bf04eaa4fcb25e2ca255969a10054eba4f6cd4d18823d04f7d", reason = "Regular expression match Generic Secret in test_all.py 11-Jun-2018"},
+  {signature = "2997b5e91c6fce7ac139f7dae75233e92a4071622278f1655a1b6b2da153f369", reason = "High entropy string commit_w_secret in test_all.py 11-Jun-2018"},
+  {signature = "06a16d530df98a23aa64849e174e6fcabaf5f9ed694689d52dabbd94c4119d74", reason = "High entropy string since_commit in test_all.py 11-Jun-2018"},
+  {signature = "24ea5e2e5cc32d28717d82d0a1590ad2dbeb156f78d6c44e0c532651a30d112a", reason = "Regular expression match, PGP private key block 29-Sep-2018"},
+  {signature = "7fc09a40d723d6319925807f289ae938555727ae5923ed8d9c33c623be63b377", reason = "Regular expression match, SSH (EC) private key in scripts/searchOrg.py 29-08-2018"},
+  {signature = "2a0942431fa590b69f39dc07deb3a45f7c2c0ed924779cee71d5dca50da3add4", reason = "Regular expression match, SSH (DSA) private key in scripts/searchOrg.py 29-08-2018"},
+  {signature = "7b340aece8b98acd35df24e5379960d66d2f0a11eaf5a28ea8c65d0646bd0086", reason = "Regular expression match, RSA private key in scripts/searchOrg.py 29-08-2018"},
+  {signature = "72d729cd5c77b291c7b91b7ffb07cf349d9de9cc69b5f39c3d4811b7384ce90d", reason = "High entropy string random_stringHex in test_all.py 7-Jun-2019"},
+  {signature = "c4cf271e74541b1e2bf9a051f57f1bf014c6fd66aa3c3d8fc4051d479f8ae3af", reason = "High entropy string random_stringB64 in test_all.py 7-Jun-2019"},
+  {signature = "b5fed92561af0d82cda01713676a590dbefe3fdb70b1a56468a74d52432d4ff4", reason = "High entropy string BASE64_CHARS in truffleHog/truffleHog.py 10-Jun-2019"},
+  {signature = "160436596acda73284ee4300da19785d2bf9a8a2eba48ec66e57bf80590157e4", reason = "Regular expression match, commit_w_secret in test_all.py 28-Aug-2019"},
+  {signature = "95771bfa1cf0f2c66844c06519574d2afe9474d5507f00a5a1d73f2960280484", reason = "Regular expression match, SSH private key in test_all.py 19-Sep-2019"},
+  {signature = "cdcf071aa7aa3360f358dc67c34a89dd9f5f8cb566a75b5558687cfca2750296", reason = "High entropy string HEX_CHARS in tartufo/scanner.py 23-Oct-2019"},
+  {signature = "7a4ec0657d846e559e6605fb0cb43b74ee4c32d13426fbcc76176604cc749dfb", reason = "High entropy string BASE64_CHARS in tartufo/scanner.py 23-Oct-2019"},
+  {signature = "948237ebd4761233e14aa6ff0cf8acc9920f0132b270e2af987e7957e6b31f00", reason = "Regular expression match commit_w_secret in tests/test_git.py 8-Nov-2019"},
+  {signature = "1f08f266f7eb6932cdfcd6ba256067552dec3d85f9d7599612e94360e9890ec1", reason = "High entropy string commit_w_secret in tests/test_git.py 8-Nov-2019"},
+  {signature = "0cdf53e226fcbdc95a5f9533de3b79e0d6993a411ebf5976bdacf416d1845e95", reason = "High entropy string since_commit in tests/test_git.py 8-Nov-2019"},
+  {signature = "29c93895d1b1703d8a6b9b0210bb2b93dbd210273cf9ee210e740e109533e977", reason = "High entropy string random_string_hex in tests/test_entropy.py 8-Nov-2019"},
+  {signature = "c7cf2a9e938b89a0fa8850fda1110dd7a1f9263648389fec5b8dbacd9e06c918", reason = "High entropy string random_string_b64 in tests/test_entropy.py 8-Nov-2019"},
+  {signature = "a47a9cc3ceac2df681683678569cde5e5298930090d26665be80066a569378a5", reason = "Regular expression match, SSH private key in tests/test_config_regexes.py 11-Nov-2019"},
+  {signature = "24db34759e7eee9168990583b3551aa6c019176e75a1655bf94e07c62e26cc19", reason = "High entropy string random_string_hex in tests/test_scanner.py 18-Nov-2019"},
+  {signature = "ba554d07d9d78f56f9a0e670e094d0247b3d51fb95c4112e0a9317d4cc960855", reason = "High entropy string random_string_b64 in tests/test_scanner.py 8-Nov-2019"},
+  {signature = "baa9ed3d871b6392cfc79a17fcffa562d2b9aa51cb548c5939c2a41f1acc8467", reason = "Regular expression match, SSH private key in tests/test_config.py 15-Nov-2019"},
+  {signature = "27eb03ed9af3707094c142b6bd485793e579ae1c59ce13193cb6b9f31c0f011f", reason = "Regular expression match, Google (GCP) Service-account 19-Nov-2019"},
+  {signature = "2a3cb329b81351e357b09f1b97323ff726e72bd5ff8427c9295e6ef68226e1d1", reason = "Regular expression match, Generic Secret in tests/test_scanner.py 11-Nov-2019"},
+  {signature = "586f9df1870fcfafd3070dc553e97db25b3fce82c9144602567d69a86597c06f", reason = "High entropy string commit_w_secret in tests/test_scanner.py 11-Nov-2019"},
+  {signature = "842533f44cf32fb3d93a7f56227977aa4f16caafe82ace8f5f4de27d750c1ec1", reason = "High entropy string since_commit in tests/test_scanner.py 11-Nov-2019"},
+  {signature = "d039c652f27c4d42026c5b5c9be31bfe368b283b24248e98d92f131272580053", reason = "High entropy string BASE64_CHARS in tartufo/scanner.py 25-Aug-2020"},
+  {signature = "d26b223efb2087d4a3db7b3ff0f65362372c46190fd74b8061db8099f4a2ee60", reason = "tests/data/scan_folder/donotscan.txt"},
+  {signature = "94c45f9acae0551a2438fa8932fac466e903fd9a09bd2e11897198b133937ccd", reason = "tests/data/scan_folder/test.txt"},
+  {signature = "743b893e30777d9c4e28d3d341ca4ba1c2541a9c62b497dece75c2a64420e770", reason = "tests/test_folder_scanner.py"},
+  {signature = "38d3398905c382a79857e884f33062a5a38e4e3f8b5d54f269879601b2e847fc", reason = "tests/data/scan_folder/scan_sub_folder/sub_folder_test.txt"},
+  {signature = "9d1b278fa384c9dc58d607130d97740910309d13b29f13f7ed6348738ea4f32c", reason = "tests/test_folder_scanner.py 16-Nov-2021"},
+  {signature = "9f675d4d7f43e484e07fb199a1e7ec372ef204631c1f4ec054acc3119fbde4cf", reason = "build_and_publish_docker_file 13-Jun-2019"},
+  {signature = "c94ba36a7411bf89fab6e87076740deecdc7a61fcfbbc1aa5934608f6c4f3adb", reason = "tests/data/config/rule_pattern_config.toml"},
+  {signature = "4f44b817b42c94fa01f47166ca7adaa0b750b1b6cd84f7ce3bf23a7728cdac57", reason = "commit hashes in github URLs in comments, tartufo/scanner.py"}
+]
+regex = true
+repo-path = "."
+
+[tool.black]
+exclude = '''
+/(
+    \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.mypy_cache
+    | \.pytest_cache
+    | \.tox
+    | \.venv
+    | _build
+    | build
+    | dist
+)/
+'''
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+
+[tool.pytest]
+# Not yet supported, see https://github.com/pytest-dev/pytest/issues/1556
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+
+[tool.pylint.'MESSAGES CONTROL']
+# C0111: Missing docstrings
+# C0301: Line too long (Note: This is all handled by black now)
+# R0801: Similar lines in other files
+# R0903: Too few public methods
+# R0912: Too many branches
+# R0914: Too many local variables
+# W0511: FIXME
+# E1136: Unsubscriptable object (Disabled due to Python 3.9 compatibility bug in pylint)
+disable = "C0111,C0301,C0302,R0801,R0903,R0912,R0914,W0511,E1136,W1514"
+
+[tool.pylint.BASIC]
+module-rgx = "(([a-z_][a-z0-9_]*)|([a-z][a-zA-Z0-9]+))$"
+
+[tool.pylint.FORMAT]
+max-line-length = "120"
+
+[tool.pylint.DESIGN]
+max-args = "14"
+
+[tool.pylint.MASTER]
+ignore = "docs/"
+extension-pkg-whitelist = ["pygit2"]
+
+[tool.coverage.run]
+branch = true
+source = ["tartufo"]
+
+[tool.coverage.report]
+exclude_lines = [
+  # Have to re-enable the standard pragma
+  "pragma: no cover", # Don't complain about missing debug-only code:
+  "def __repr__",
+  "if self.debug", # Don't complain if tests don't hit defensive assertion code:
+  "raise AssertionError",
+  "raise NotImplementedError", # Don't complain if non-runnable code isn't run:
+  "if 0:",
+  "if __name__ == .__main__.:", # Don't complain about mypy-specific code
+  "if TYPE_CHECKING:",
+]
+ignore_errors = true

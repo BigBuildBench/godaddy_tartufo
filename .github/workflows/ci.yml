@@ -1,0 +1,111 @@
+name: ci
+
+on:
+  push:
+    branches: [ main, v3.x ]
+  pull_request:
+    branches: [ main, v3.x ]
+
+jobs:
+  tartufo:
+    name: Run Tartufo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
+        name: Checkout the repo
+      - uses: godaddy/tartufo-action@d95293febe8f40a6b8ee3ac0acebfc36c3b7e0d1
+        name: Run Tartufo
+  unit-test:
+    name: Unit Tests
+    needs: [ tartufo ]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: [3.8, 3.9, "3.10", 3.11, 3.12, 3.13]
+        include:
+          - os: ubuntu-latest
+            path: ~/.cache/pypoetry
+          - os: windows-latest
+            path: ~\AppData\Local\pypoetry\Cache
+          - os: macos-latest
+            path: ~/Library/Caches/pypoetry
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHON: ${{ matrix.python-version }}
+      OS: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
+      name: Checkout the repo
+    - uses: actions/cache@6fd2d4538ca777f67fccddb233cf1a8ff1339012
+      name: Cache Poetry & Tox deps
+      with:
+        path: |
+          {{ matrix.path }}
+          .tox
+        key: ${{ matrix.os }}-venvs-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ matrix.os }}-venvs-${{ matrix.python-version }}
+          ${{ matrix.os }}-venvs
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@db9987b4c1f10f0404fa60ee629f675fafbd6763
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pip install -U pip
+        pip install poetry tox tox-gh-actions
+      # run:  pip install poetry tox codecov tox-gh-actions
+    - name: Unit test in Python ${{ matrix.python-version }} on ${{ matrix.os }}
+      run: tox -vv
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@e156083f13aff6830c92fc5faa23505779fbf649
+    #   with:
+    #     file: coverage.xml
+    #     env_vars: OS,PYTHON
+  linting:
+    name: Linting
+    runs-on: ubuntu-latest
+    needs: [ tartufo ]
+    strategy:
+      fail-fast: false
+      matrix:
+        toxenv: [pylint, vulture, mypy, black, docs]
+    steps:
+    - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
+      name: Checkout the repo
+    - uses: actions/cache@6fd2d4538ca777f67fccddb233cf1a8ff1339012
+      name: Cache Poetry & Tox deps
+      with:
+        path: |
+          ~/.cache/pypoetry
+          .tox
+        key: venvs-${{ matrix.toxenv }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          venvs-${{ matrix.toxenv }}-
+    - name: Set up Python
+      uses: actions/setup-python@db9987b4c1f10f0404fa60ee629f675fafbd6763
+      with:
+        python-version: 3.12
+    - name: Install dependencies
+      run: |
+        pip install -U pip
+        pip install poetry tox
+    - name: Run ${{ matrix.toxenv }}
+      run: |
+        tox -vv -e ${{ matrix.toxenv }}
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [ tartufo ]
+    steps:
+    - uses: actions/checkout@f095bcc56b7c2baf48f3ac70d6d6782f4f553222
+      name: Checkout the repo
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@a946f06b5ddbde456d0115dc585e8dc3c7a0c3e0
+      with:
+        install: true
+    - name: Build and Verify
+      run: |
+        docker build --load -t sanitycheck .
+        docker run --rm -v $PWD:/git sanitycheck scan-local-repo /git
